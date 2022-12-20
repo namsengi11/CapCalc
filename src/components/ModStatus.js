@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Stats from "./Stats";
 import Modules from "./Modules";
+import AddMod from "./AddMod";
 
 class ModStatus extends Component {
   state = {
@@ -69,29 +70,41 @@ class ModStatus extends Component {
     }
   }
 
-  getStat = () => {
-    const totalGrade = this.state.mods
+  getStat = (allMods) => {
+    const totalGrade = allMods
       .map((mod) => this.getNumGrade(mod.grade) * mod.mc)
       .reduce((x, y) => x + y);
 
-    const totalMC = this.state.mods
-      .map((mod) => mod.mc)
-      .reduce((x, y) => x + y);
+    const totalMC = allMods.map((mod) => mod.mc).reduce((x, y) => x + y);
 
-    const cap = totalGrade / totalMC;
+    const cap = Math.round((totalGrade / totalMC) * 100) / 100;
+    const su = allMods.filter((mod) => mod.su).length;
 
     this.setState({
-      ...this.state,
       stat: {
         gpa: cap,
         mc: totalMC,
-        suLeft: 8,
+        suLeft: 8 - su,
       },
     });
   };
 
+  updateMod = (newMod) => {
+    const currMod = this.state.mods;
+
+    const convertedToNum = newMod;
+    convertedToNum.mc = Number(newMod.mc);
+    convertedToNum.su = newMod.su === "" ? false : true;
+
+    this.setState({
+      mods: [...currMod, convertedToNum],
+    });
+    console.log([...currMod, convertedToNum]);
+    this.getStat([...currMod, convertedToNum]);
+  };
+
   componentDidMount() {
-    this.getStat();
+    this.getStat(this.state.mods);
   }
 
   render() {
@@ -99,6 +112,17 @@ class ModStatus extends Component {
       <div>
         <Stats stat={this.state.stat} />
         <Modules mods={this.state.mods} />
+        <div
+          style={{
+            alignItem: "center",
+            justifyContent: "center",
+            display: "flex",
+            width: "100vw",
+            height: "100vh",
+          }}
+        >
+          <AddMod handleAddMod={this.updateMod} />
+        </div>
       </div>
     );
   }
